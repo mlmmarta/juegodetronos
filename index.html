@@ -33,13 +33,18 @@ var config = {
 };
 
 var player;
-var stars;
+var dragoneggs;
 var bombs;
 var platforms;
 var cursors;
 var score = 0;
 var gameOver = false;
 var scoreText;
+var dragonText;
+var tecla;
+var dragon;
+var level=1;
+var levelText;
 
 var game = new Phaser.Game(config);
 
@@ -49,6 +54,7 @@ function preload ()
     this.load.image('ground', 'assets/platform.png');
     this.load.image('huevo', 'assets/huevo.png');
     this.load.image('bomb', 'assets/bomb.png');
+    this.load.image('dragon', 'assets/dragon.png');
     this.load.spritesheet('kalesy', 'assets/kalesy.png', { frameWidth: 64, frameHeight: 64 });
 }
 
@@ -105,15 +111,18 @@ function create ()
 
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
+    //Para capturar el evente de la tecla E
+    tecla=this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
 
-    //  Some stars to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
-    stars = this.physics.add.group({
+
+    //  Some dragoneggs to collect, 12 in total, evenly spaced 70 pixels apart along the x axis
+    dragoneggs = this.physics.add.group({
         key: 'huevo',
         repeat: 11,
         setXY: { x: 12, y: 0, stepX: 70 }
     });
 
-    stars.children.iterate(function (child) {
+    dragoneggs.children.iterate(function (child) {
 
         //  Give each star a slightly different bounce
         child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
@@ -121,19 +130,20 @@ function create ()
     });
 
     bombs = this.physics.add.group();
-
+   
+    levelText = this.add.text(350, 550, 'LEVEL: 1', { fontSize: '32px', fill: 'white' });
     //  The score
     scoreText = this.add.text(550, 550, 'SCORE: 0', { fontSize: '32px', fill: 'white' });
 
-    //  Collide the player and the stars with the platforms
+    //  Collide the player and the dragoneggs with the platforms
     this.physics.add.collider(player, platforms);
-    this.physics.add.collider(stars, platforms);
+    this.physics.add.collider(dragoneggs, platforms);
     this.physics.add.collider(bombs, platforms);
-
-    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    this.physics.add.overlap(player, stars, collectStar, null, this);
-
+    
+    //  Checks to see if the player overlaps with any of the dragoneggs, if he does call the collectStar function
+    this.physics.add.overlap(player, dragoneggs, collectStar, null, this);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
+
 }
 
 function update ()
@@ -161,6 +171,17 @@ function update ()
 
         player.anims.play('down', true);
     }
+    else if (tecla.isDown)
+    {
+        
+        dragon = this.physics.add.sprite(700, 450, 'dragon');
+        dragon.setCollideWorldBounds(true);
+        this.physics.add.collider(dragon, platforms);
+        dragonText = this.add.text  (25, 550, 'COGE A TU DRAGÓN!!!', { fontSize: '28px', fill: 'YELLOW'});
+        console.log("antes");
+        this.physics.add.overlap(player, dragon, collectDragon, null, this);
+         console.log("despues");
+    }
     else
     {
         player.setVelocityX(0);
@@ -172,6 +193,7 @@ function update ()
     {
         player.setVelocityY(-330);
     }
+    
 }
 
 function collectStar (player, star)
@@ -182,10 +204,10 @@ function collectStar (player, star)
     score += 10;
     scoreText.setText('Score: ' + score);
 
-    if (stars.countActive(true) === 0) 
+    if (dragoneggs.countActive(true) === 0) 
     {
-        //  A new batch of stars to collect
-        stars.children.iterate(function (child) {
+        //  A new batch of dragoneggs to collect
+        dragoneggs.children.iterate(function (child) {
 
             child.enableBody(true, child.x, 0, true, true);
 
@@ -198,6 +220,8 @@ function collectStar (player, star)
         bomb.setCollideWorldBounds(true);
         bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
         bomb.allowGravity = false;
+        level += 1;
+        levelText.setText('Level: ' + level);
 
     }
 }
@@ -214,6 +238,18 @@ function hitBomb (player, bomb)
         gameOver = true; //Paramos el juego
     }
 
+}
+
+function collectDragon (player, dragon)
+{
+    dragon.disableBody(true, true);
+
+    //  Add and update the score
+    console.log(score);
+    score = score + 20;
+    console.log(score);
+    scoreText.setText('Score: ' + score);
+   
 }
 
 </script>
